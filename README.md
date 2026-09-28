@@ -71,6 +71,24 @@ px0 -host 0.0.0.0 -port 7777 ~/workspace
 px0 -base-path /rev-123/ -host 0.0.0.0 -port 7777 ~/workspace
 ```
 
+When px0 binds to `0.0.0.0`, it prints a `network` URL for every unique
+non-loopback IPv4 address on the machine, using the port selected by the
+listener:
+
+```text
+  url:        http://0.0.0.0:7777
+  network:    http://10.0.0.15:7777
+  network:    http://192.168.1.42:7777
+```
+
+Open the address that is reachable from your local machine. The list can
+include LAN, VPN, and container-network addresses, depending on the remote
+host's interfaces.
+
+Access securely over Tailscale, WireGuard, reverse proxy, or Cloudflare Tunnel
+with zero remote setup overhead and strict read-only sandboxing
+(path traversal protection & DNS rebinding checks).
+
 ## Development
 
 ```bash
