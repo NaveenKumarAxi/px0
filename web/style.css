@@ -430,6 +430,10 @@ body.side-hidden #side, body.side-hidden #resizer { display: none; }
 .hint .src { color: var(--accent-fg); }
 .hint .warn { color: var(--mark-active); }
 .rline .rt { overflow: hidden; text-overflow: ellipsis; color: var(--dim); flex: 1; }
+.semantic-hit { white-space: normal; align-items: flex-start; }
+.semantic-hit .rt { display: flex; flex-direction: column; gap: 2px; white-space: normal; }
+.semantic-path { color: var(--faint); font: 10px var(--ui); }
+.semantic-desc { color: var(--dim); font: 11px/1.45 var(--ui); white-space: normal; }
 .rline mark { background: var(--mark); color: inherit; border-radius: 2px; }
 .hint { padding: 10px 12px; color: var(--faint); font-size: 12px; line-height: 1.6; }
 

@@ -164,12 +164,15 @@ func main() {
 		pxSrv.SetPR(pr)
 	}
 	var agent *agentManager
+	var semantic *semanticManager
 	if !*noAgent {
 		agent, err = newAgentManager(root, *agentCmd, lsp)
 		if err != nil {
 			fatal(fmt.Errorf("-agent: %w", err))
 		}
 		pxSrv.SetAgent(agent)
+		semantic = newSemanticManager(ix, agent)
+		pxSrv.SetSemanticSearch(semantic)
 	}
 	initDur := time.Since(tInit)
 
@@ -211,6 +214,11 @@ func main() {
 	// Index workspace asynchronously so the server and UI respond in <1ms.
 	go func() {
 		ix.Build()
+		if semantic != nil && pxSrv.semanticEnabled() {
+			if err := semantic.Start(); err != nil && uiVerbose {
+				uiStatus("err", "semantic search", err.Error(), 0, os.Stdout)
+			}
+		}
 		n, _, ms := ix.Stats()
 		uiStatus("ok", fmt.Sprintf("indexed %d files", n), fmt.Sprintf("%dms", ms), 0, os.Stdout)
 		tLSP := time.Now()

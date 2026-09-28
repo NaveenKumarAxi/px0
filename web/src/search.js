@@ -36,7 +36,29 @@ export const runSearch = debounce(async () => {
     re: $('#o-re')?.classList.contains('on') ? 1 : '',
   };
   try {
-    const j = await api('/api/search', params, { signal: controller.signal });
+    const semantic = $('#o-semantic')?.classList.contains('on');
+    if (semantic) {
+      const status = await api('/api/semantic/status', {}, { signal: controller.signal });
+      if (!status.enabled) {
+        const message = status.state === 'unavailable'
+          ? status.error
+          : 'Enable Semantic Method Search in Settings first. Method source is sent to the selected coding harness, and embeddings are sent to the configured embedding endpoint.';
+        resultsEl.innerHTML = '<div class="hint">' + esc(message || 'Semantic search is unavailable.') + '</div>';
+        return;
+      }
+      if (status.state === 'indexing') {
+        resultsEl.innerHTML = '<div class="hint">Indexing methods: ' + status.done + ' / ' + status.total + '</div>';
+        if (searchAbort === controller) setTimeout(runSearch, 800);
+        return;
+      }
+      if (status.state !== 'ready') {
+        resultsEl.innerHTML = '<div class="hint">' + esc(status.error || 'Semantic index is not ready.') + '</div>';
+        return;
+      }
+    }
+    const j = semantic
+      ? await api('/api/semantic/search', { q }, { signal: controller.signal })
+      : await api('/api/search', params, { signal: controller.signal });
     if (searchAbort === controller) {
       searchAbort = null;
       renderResults(j);
@@ -54,7 +76,17 @@ export function renderResults(j) {
   lastResults = j;
   if (!resultsEl) return;
   if (!j.results || !j.results.length) {
-    resultsEl.innerHTML = '<div class="hint">No results.</div>';
+    resultsEl.innerHTML = '<div class="hint">' + esc(j.mode === 'semantic' ? 'No semantically similar methods found.' : 'No results.') + '</div>';
+    return;
+  }
+  if (j.mode === 'semantic') {
+    let html = '<div class="hint">' + j.results.length.toLocaleString() + ' semantically similar methods</div>';
+    for (const hit of j.results) {
+      html += '<div class="rline semantic-hit" data-p="' + esc(hit.path) + '" data-n="' + hit.line + '" title="Jump to ' + esc(hit.path) + ':' + hit.line + '">' +
+        '<span class="rn">' + hit.line + '</span><span class="rt"><b>' + esc(hit.name) + '</b> <span class="semantic-path">' + esc(displayPath(hit.path)) + '</span>' +
+        '<span class="semantic-desc">' + esc(hit.description) + '</span></span></div>';
+    }
+    resultsEl.innerHTML = html;
     return;
   }
   const head = j.header || (j.total.toLocaleString() + ' result' + (j.total === 1 ? '' : 's') +
@@ -104,7 +136,7 @@ export function initSearch() {
       r.classList.add('sel');
       openFile(r.dataset.p, { line: +r.dataset.n });
       const q = $('#q')?.value;
-      if (q) flashFind(q);
+      if (q && !$('#o-semantic')?.classList.contains('on')) flashFind(q);
     }
   });
 

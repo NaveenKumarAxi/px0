@@ -15,8 +15,9 @@ import (
 // settings stores user configuration written to ~/.px0/settings.json (or XDG_CONFIG_HOME/px0/settings.json).
 // All settings are optional pointers so omitted values fall back to application defaults.
 type settings struct {
-	Agent  string            `json:"agent,omitempty"`
-	Models map[string]string `json:"models,omitempty"`
+	Agent           string            `json:"agent,omitempty"`
+	Models          map[string]string `json:"models,omitempty"`
+	SemanticEnabled *bool             `json:"semantic.enabled,omitempty"`
 
 	EditorFontSize              *float64 `json:"editor.fontSize,omitempty"`
 	EditorFontFamily            *string  `json:"editor.fontFamily,omitempty"`
@@ -325,6 +326,14 @@ var settingsSchema = []settingSchemaItem{
 		Category:    "Agent / AI",
 		Type:        "string",
 		Default:     "",
+	},
+	{
+		Key:         "semantic.enabled",
+		Title:       "Semantic Method Search",
+		Description: "Analyze method summaries with the selected coding harness and build an in-memory vector index. This sends method source to that harness and requires an OpenAI-compatible embedding endpoint configured through environment variables.",
+		Category:    "Agent / AI",
+		Type:        "boolean",
+		Default:     false,
 	},
 	{
 		Key:         "agent.timeoutSeconds",

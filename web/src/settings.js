@@ -264,6 +264,14 @@ const BUILTIN_SCHEMA = [
     default: ""
   },
   {
+    key: "semantic.enabled",
+    title: "Semantic Method Search",
+    description: "Use the selected coding harness to describe methods and an OpenAI-compatible embedding endpoint to build an in-memory semantic search index. Method source and embedding text are sent to those configured services.",
+    category: "Agent / AI",
+    type: "boolean",
+    default: false
+  },
+  {
     key: "agent.timeoutSeconds",
     title: "Agent Timeout (Seconds)",
     description: "Controls the maximum execution time in seconds for agent edits before canceling.",

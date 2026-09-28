@@ -12,6 +12,7 @@ This directory provides comprehensive documentation for all px0 user-facing feat
 | :--- | :--- | :--- | :--- |
 | **Fuzzy File Search** | `Cmd/Ctrl+P`, `Cmd/Ctrl+K` | Instant fuzzy path finding across 100,000+ files with recency ranking | [Fuzzy File Search](fuzzy-file-search.md) |
 | **Workspace Search** | `Cmd/Ctrl+Shift+F` | Full-repository literal and regex text search with match previews | [Workspace Search](workspace-search.md) |
+| **Semantic Method Search** | Search pane: Semantic | Natural-language search over method summaries with an in-memory HNSW index | [Semantic Method Search](semantic-method-search.md) |
 | **Symbol Outline** | `Cmd/Ctrl+Shift+O` | In-file function, class, and struct hierarchy with regex fallback | [Symbol Outline](symbol-outline.md) |
 | **In-File Find & Caret** | `Cmd/Ctrl+F`, `Cmd/Ctrl+G` | Active document search, minimap match markers, and line jumps | [In-File Search](in-file-search.md) |
 | **Git Awareness, Diffs & Stage/Commit/Push/Pull** | `Cmd/Ctrl+D` | Real-time status stream, stat cache fast-path, split / unified diffs, a sidebar panel to stage/commit/push/fast-forward-pull, and AI-written commit messages | [Git Integration](git-integration.md) |

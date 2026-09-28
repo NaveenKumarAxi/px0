@@ -135,6 +135,36 @@ func TestAgentSpecResolution(t *testing.T) {
 	}
 }
 
+func TestCodexUsesCliDefaultInsteadOfStaleSavedModel(t *testing.T) {
+	isolateSettings(t)
+	binDir := t.TempDir()
+	codexPath := filepath.Join(binDir, "codex")
+	if err := os.WriteFile(codexPath, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	if err := writeSettings(settings{Agent: "codex", Models: map[string]string{"codex": "gpt-5-codex"}}); err != nil {
+		t.Fatal(err)
+	}
+
+	m, err := newAgentManager(t.TempDir(), "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.Name() != "codex" {
+		t.Fatalf("selected = %q, want codex", m.Name())
+	}
+	if m.Model() != "" {
+		t.Fatalf("model = %q, want Codex CLI default", m.Model())
+	}
+	_, args, _ := m.current()
+	for _, arg := range args {
+		if arg == "-m" || arg == "gpt-5-codex" {
+			t.Fatalf("Codex args %v still force the stale saved model", args)
+		}
+	}
+}
+
 func TestAgentDetectListsKnownHarnesses(t *testing.T) {
 	isolateSettings(t)
 	m, err := newAgentManager(t.TempDir(), "", nil)

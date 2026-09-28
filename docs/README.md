@@ -13,6 +13,7 @@ Detailed walkthroughs of all px0 features, capabilities, developer workflows, an
 - **[Features Overview & Catalog](features/README.md)**: Master index of all 17 feature areas.
 - **[Fuzzy File Search & Quick Open](features/fuzzy-file-search.md)**: Rapid multi-file discovery with recency weighting (`Cmd/Ctrl+P`, `Cmd/Ctrl+K`).
 - **[Workspace Text & Regex Search](features/workspace-search.md)**: Full-repository pattern matching and symbol exploration (`Cmd/Ctrl+Shift+F`).
+- **[Semantic Method Search](features/semantic-method-search.md)**: Opt-in natural-language method search using a selected coding harness and an OpenAI-compatible embeddings endpoint.
 - **[Symbol Outline & Navigation](features/symbol-outline.md)**: In-file structural symbol trees with LSP and regex fallbacks (`Cmd/Ctrl+Shift+O`).
 - **[In-File Find & Caret Navigation](features/in-file-search.md)**: Active document search (`Cmd/Ctrl+F`), line jumps (`Cmd/Ctrl+G`), and caret motion.
 - **[Git Awareness & Visual Diff Viewer](features/git-integration.md)**: Status badges, dirty ancestor trees, gutter markers, and side-by-side / unified diffs (`Cmd/Ctrl+D`).
@@ -40,6 +41,7 @@ In-depth technical write-ups covering px0's Go server runtime, concurrency pipel
 - **[Language Server Protocol Architecture](internals/lsp-and-intelligence.md)**
 - **[Git Awareness & Porcelain Diffing](internals/git-integration.md)**
 - **[Harness Editing & Agent Dispatch](internals/agent-editing.md)**
+- **[Semantic Method Search](internals/semantic-search.md)**
 - **[Editor Virtualization & Caret Engine](internals/editor-virtualization.md)**
 - **[Image Viewer Architecture](internals/image-viewer.md)**
 - **[File Updates & In-Place Tab Reloading](internals/file-reload-and-updates.md)**

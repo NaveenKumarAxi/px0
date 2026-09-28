@@ -116,20 +116,10 @@ var agentPresets = []agentPreset{
 	},
 	{
 		Name:         "codex",
-		Args:         []string{"codex", "exec", "--ask-for-approval", "never", "{prompt}"},
+		Args:         []string{"codex", "exec", "--approve-for-me", "--sandbox", "workspace-write", "--skip-git-repo-check", "{prompt}"},
 		ModelFlag:    "-m",
-		DefaultModel: "gpt-5-codex",
-		Models: []string{
-			"gpt-5-codex",
-			"gpt-5-mini",
-			"gpt-5.1-codex",
-			"gpt-5.1-codex-max",
-			"gpt-5.1-codex-mini",
-			"gpt-5.2-codex",
-			"gpt-4.1",
-			"o3-mini",
-			"o1",
-		},
+		// Let Codex choose its account-supported model. Model names and
+		// availability vary by CLI version and ChatGPT account tier.
 	},
 	{
 		Name:         "aider",
@@ -463,6 +453,10 @@ func newAgentManager(root, flagSpec string, lsp *lspManager) (*agentManager, err
 			m.models[k] = v
 		}
 	}
+	// Older px0 versions persisted gpt-5-codex here, which is unsupported
+	// for some ChatGPT-account Codex CLI logins. Codex now chooses its own
+	// account-supported default unless a model is explicitly selected.
+	delete(m.models, "codex")
 
 	if spec := strings.TrimSpace(flagSpec); spec != "" {
 		name, args, chosenModel, err := resolveAgentSpec(spec, m.models[spec])
@@ -1331,6 +1325,9 @@ func (s *Server) handleAgentSelect(w http.ResponseWriter, r *http.Request) {
 		}
 		fail(w, code, err.Error())
 		return
+	}
+	if s.semanticEnabled() {
+		_ = s.semantic.Restart()
 	}
 	writeJSON(w, map[string]any{
 		"harnesses": s.agent.Detect(),

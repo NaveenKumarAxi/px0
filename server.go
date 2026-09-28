@@ -63,6 +63,7 @@ type Server struct {
 	ix        *Index
 	lsp       *lspManager
 	agent     *agentManager  // nil unless main wires editing for this session
+	semantic  *semanticManager
 	threads   *threadManager // nil unless editing is wired: threads run on the same harness
 	pr        *prSession     // nil unless main launched this process as `px0 pr ...`
 	diffBase  string         // ref /api/diff and /api/gutter diff against; "HEAD" unless in PR mode
@@ -148,6 +149,8 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc(s.routePath("/api/git/pull"), s.handleGitPull)
 	s.mux.HandleFunc(s.routePath("/api/git/log"), s.handleGitLog)
 	s.mux.HandleFunc(s.routePath("/api/search"), s.handleSearch)
+	s.mux.HandleFunc(s.routePath("/api/semantic/status"), s.handleSemanticStatus)
+	s.mux.HandleFunc(s.routePath("/api/semantic/search"), s.handleSemanticSearch)
 	s.mux.HandleFunc(s.routePath("/api/outline"), s.handleOutline)
 	s.mux.HandleFunc(s.routePath("/api/def"), s.handleDef)
 	s.mux.HandleFunc(s.routePath("/api/reindex"), s.handleReindex)
@@ -431,6 +434,65 @@ func (s *Server) SetAgent(a *agentManager) {
 			}
 		}
 	}
+}
+
+// SetSemanticSearch wires optional method-level semantic search. It remains
+// disabled unless the user explicitly enables semantic.enabled in settings.
+func (s *Server) SetSemanticSearch(m *semanticManager) {
+	s.semantic = m
+}
+
+func (s *Server) semanticEnabled() bool {
+	if s.semantic == nil {
+		return false
+	}
+	setting := readSettings().SemanticEnabled
+	return setting != nil && *setting
+}
+
+func (s *Server) syncSemanticSetting() {
+	if s.semantic == nil {
+		return
+	}
+	if s.semanticEnabled() {
+		if err := s.semantic.Start(); err != nil && uiVerbose {
+			uiStatus("err", "semantic search", err.Error(), 0, os.Stdout)
+		}
+	} else {
+		s.semantic.Stop()
+	}
+}
+
+func (s *Server) handleSemanticStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fail(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if s.semantic == nil {
+		writeJSON(w, semanticStatus{State: "unavailable", Error: "semantic search requires an enabled coding harness"})
+		return
+	}
+	writeJSON(w, s.semantic.Status(s.semanticEnabled()))
+}
+
+func (s *Server) handleSemanticSearch(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fail(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if s.semantic == nil || !s.semanticEnabled() {
+		fail(w, http.StatusServiceUnavailable, "enable Semantic Method Search in Settings first")
+		return
+	}
+	hits, err := s.semantic.Search(r.Context(), r.URL.Query().Get("q"), semanticTopK)
+	if err != nil {
+		if errors.Is(err, context.Canceled) || r.Context().Err() != nil {
+			return
+		}
+		fail(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	writeJSON(w, map[string]any{"mode": "semantic", "results": hits, "total": len(hits)})
 }
 
 // SetPR marks this process as a PR review session: diffs are computed
@@ -1556,6 +1618,11 @@ func (s *Server) handleDef(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 	EvictAll()
 	s.ix.Build()
+	if s.semanticEnabled() {
+		if err := s.semantic.Restart(); err != nil && uiVerbose {
+			uiStatus("err", "semantic search", err.Error(), 0, os.Stdout)
+		}
+	}
 	if s.gitWatcher != nil {
 		s.gitWatcher.Trigger()
 	}
@@ -1619,6 +1686,7 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 				_ = s.agent.Select(currentSettings.Agent, s.agent.Model())
 			}
 		}
+		s.syncSemanticSetting()
 
 		writeJSON(w, map[string]any{
 			"settings": readMergedSettingsMap(),
